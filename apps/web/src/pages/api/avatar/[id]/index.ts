@@ -1,0 +1,12 @@
+import type { APIRoute } from "astro";
+import { handleAvatarRequest } from "../../../../lib/api/pipeline";
+
+/** GET /api/avatar/:id — current active avatar (image response). */
+export const GET: APIRoute = async ({ params, url, request, locals }) => {
+  return handleAvatarRequest({
+    request,
+    url,
+    avatarId: params.id ?? "",
+    locals,
+  });
+};

@@ -1,0 +1,22 @@
+---
+const snippet = `go get github.com/nicebear/nicebear-go
+
+c := nicebear.New("https://api.nicebear.dev", "nb_live_...")
+println(c.AvatarURL("av_123", "john", nil))
+col, _ := c.CreateCollection("team-avatars", "pixel-art", "")
+av, _ := c.CreateAvatar(map[string]any{
+    "collection_id": col["id"],
+    "type": "generated",
+    "engine": "pixel-art",
+})
+println(av["id"])`;
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Go SDK — NiceBear</title></head>
+  <body><main>
+    <h1>Go SDK</h1>
+    <p>Standard library only. Source: <code>packages/sdk-go</code>. Errors are <code>*nicebear.APIError</code> with status + body.</p>
+    <pre><code>{snippet}</code></pre>
+  </main></body>
+</html>

@@ -1,0 +1,19 @@
+---
+const snippet = `pip install nicebear
+
+from nicebear import NiceBear
+nb = NiceBear(api_key="nb_live_...")
+print(nb.avatar_url("av_123", seed="john"))
+av = nb.create_avatar({"type": "generated", "engine": "minimal"})
+print(av["id"])`;
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Python SDK — NiceBear</title></head>
+  <body><main>
+    <h1>Python SDK</h1>
+    <p>Stdlib only — no dependencies. Source: <code>packages/sdk-python</code>.</p>
+    <pre><code>{snippet}</code></pre>
+    <p>Full surface (avatars, collections, rules, schedules, keys, webhooks, analytics, team) mirrors <code>packages/openapi/spec.yaml</code>.</p>
+  </main></body>
+</html>

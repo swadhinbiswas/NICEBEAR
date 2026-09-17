@@ -1,0 +1,23 @@
+# Cloudflare Pages + Functions
+# See docs/deployment-cloudflare.md for the full setup.
+name = "nicebear"
+compatibility_date = "2025-01-01"
+
+[vars]
+JSDELIVR_BASE = "https://cdn.jsdelivr.net"
+
+# Rotation decision cache: avatar:{id}:active → resolved pointer,
+# TTL = until next rotation boundary. Create with:
+#   wrangler kv namespace create DECISIONS
+[[kv_namespaces]]
+binding = "DECISIONS"
+id = "PLACEHOLDER_DECISIONS_KV_ID"
+
+[[queues.producers]]
+binding = "WEBHOOK_QUEUE"
+queue = "nicebear-webhook-delivery"
+
+[[queues.consumers]]
+queue = "nicebear-webhook-delivery"
+max_batch_size = 10
+max_retries = 5

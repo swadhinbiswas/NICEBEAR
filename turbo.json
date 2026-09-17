@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "DONATE_URL"],
+  "tasks": {
+    "build": {"dependsOn": ["^build"], "outputs": ["dist/**", ".astro/**"]},
+    "typecheck": {},
+    "test": {},
+    "dev": {"cache": false, "persistent": true}
+  }
+}

@@ -1,0 +1,342 @@
+openapi: 3.1.0
+info:
+  title: NiceBear API
+  version: 0.1.0
+  description: >-
+    Dynamic Avatar Infrastructure. Single source of truth for SDK codegen,
+    docs rendering, and server validation (mirrors packages/shared-types).
+    Content policy: avatar sources are generated | uploaded | external_url
+    (with attest_rights). No bulk-import endpoints exist by design.
+servers:
+  - url: https://api.nicebear.dev
+paths:
+  /api/avatar/{id}:
+    get:
+      operationId: getAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: seed, in: query, schema: { type: string } }
+        - { name: v, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Image bytes (or 302 to jsDelivr for committed assets) }
+        '404': { description: No avatar matched }
+  /api/avatar/{id}/random:
+    get:
+      operationId: getRandomAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Random avatar image }
+  /api/avatar/{id}/refresh:
+    get:
+      operationId: refreshAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Fresh avatar image (no-cache) }
+  /api/avatar/{id}/daily:
+    get:
+      operationId: getDailyAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Daily avatar image }
+  /api/avatar/{id}/weekly:
+    get:
+      operationId: getWeeklyAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Weekly avatar image }
+  /api/avatar/{id}/monthly:
+    get:
+      operationId: getMonthlyAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Monthly avatar image }
+  /api/avatar/{id}/custom:
+    post:
+      operationId: getCustomAvatar
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [every]
+                  properties: { every: { type: string, example: 3 days } }
+                - type: object
+                  required: [cron]
+                  properties: { cron: { type: string, example: '0 0 * * *' } }
+      responses:
+        '200': { description: Custom-schedule avatar image }
+  /api/avatars:
+    post:
+      operationId: createAvatar
+      security: [{ apiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [type, engine]
+                  properties:
+                    type: { const: generated }
+                    engine: { type: string }
+                    seed: { type: string }
+                - type: object
+                  required: [type, filename, content_base64, content_type]
+                  properties:
+                    type: { const: uploaded }
+                    filename: { type: string }
+                    content_base64: { type: string }
+                    content_type: { type: string }
+                - type: object
+                  required: [type, source_url, attest_rights]
+                  properties:
+                    type: { const: external_url }
+                    source_url: { type: string, format: uri }
+                    attest_rights: { const: true }
+                    mirror: { type: boolean, default: true }
+      responses:
+        '202': { description: Accepted }
+        '400': { description: Validation error }
+  /api/report:
+    post:
+      operationId: reportContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [avatar_id, reason]
+              properties:
+                avatar_id: { type: string }
+                reporter_contact: { type: string }
+                reason: { type: string }
+      responses:
+        '202': { description: Report opened }
+  /api/avatars/{id}:
+    get:
+      operationId: getAvatarMeta
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Avatar metadata }
+        '404': { description: Not found }
+    delete:
+      operationId: deleteAvatar
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Soft-deleted }
+  /api/avatars/{id}/rollback:
+    post:
+      operationId: rollbackAvatar
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version]
+              properties: { version: { oneOf: [{ type: integer }, { const: latest }] } }
+      responses:
+        '200': { description: Pinned to prior commit_sha }
+  /api/collections:
+    post:
+      operationId: createCollection
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Collection created }
+    get:
+      operationId: listCollections
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: org_id, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Collections with member counts }
+  /api/collections/{id}:
+    get:
+      operationId: getCollection
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Collection + member avatar ids }
+  /api/collections/{id}/avatars:
+    post:
+      operationId: attachAvatar
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Avatar attached }
+  /api/rotation-rules:
+    post:
+      operationId: createRotationRule
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Rule created }
+    get:
+      operationId: listRotationRules
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: target_type, in: query, required: true, schema: { type: string } }
+        - { name: target_id, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Rules for the target }
+  /api/rotation-rules/{id}:
+    put:
+      operationId: updateRotationRule
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Rule updated }
+  /api/schedules:
+    post:
+      operationId: createSchedule
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Schedule created }
+    get:
+      operationId: listSchedules
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: rotation_rule_id, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Schedules for the rule }
+  /api/team:
+    get:
+      operationId: listMembers
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: org_id, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Members with emails }
+    post:
+      operationId: addMember
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Member added }
+    put:
+      operationId: setMemberRole
+      security: [{ apiKey: [] }]
+      responses:
+        '200': { description: Role updated }
+    delete:
+      operationId: removeMember
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: org_id, in: query, required: true, schema: { type: string } }
+        - { name: user_id, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Member removed }
+  /api/api-keys:
+    post:
+      operationId: createApiKey
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Key minted (plaintext shown once) }
+    get:
+      operationId: listApiKeys
+      security: [{ apiKey: [] }]
+      responses:
+        '200': { description: Own key metadata (hashes never returned) }
+  /api/api-keys/{id}:
+    delete:
+      operationId: revokeApiKey
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: Key revoked }
+  /api/api-keys/{id}/rotate:
+    post:
+      operationId: rotateApiKey
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: New plaintext issued, old hash replaced }
+  /api/api-keys/self:
+    get:
+      operationId: whoAmI
+      security: [{ apiKey: [] }]
+      responses:
+        '200': { description: Calling key identity and owner }
+  /api/orgs/mine:
+    get:
+      operationId: listMyOrgs
+      security: [{ apiKey: [] }]
+      responses:
+        '200': { description: Orgs the caller belongs to (dashboard picker; session-aware) }
+  /api/webhooks:
+    post:
+      operationId: createWebhook
+      security: [{ apiKey: [] }]
+      responses:
+        '201': { description: Webhook created }
+    get:
+      operationId: listWebhooks
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: org_id, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Webhooks (secrets never returned) }
+  /api/webhooks/{id}/deliveries:
+    get:
+      operationId: listDeliveries
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25 } }
+      responses:
+        '200': { description: Delivery log }
+  /api/webhooks/process:
+    post:
+      operationId: processWebhooks
+      security: [{ apiKey: [] }]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { limit: { type: integer, default: 25 } }
+      responses:
+        '200': { description: Drain result with per-outcome counts }
+  /api/analytics:
+    get:
+      operationId: getAnalytics
+      security: [{ apiKey: [] }]
+      parameters:
+        - { name: metric, in: query, schema: { type: string, enum: [summary, requests, top-avatars, top-collections, geo, errors], default: summary } }
+        - { name: days, in: query, schema: { type: integer, default: 30 } }
+      responses:
+        '200': { description: Aggregated metrics }
+  /api/analytics/rollup:
+    post:
+      operationId: runRollups
+      security: [{ apiKey: [] }]
+      responses:
+        '200': { description: Buckets aggregated per grain }
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: nb_live_...

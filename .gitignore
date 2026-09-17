@@ -1,0 +1,40 @@
+# Dependencies & build output
+node_modules/
+dist/
+target/
+.astro/
+.turbo/
+
+# Python / Rust / Go artifacts
+__pycache__/
+.pytest_cache/
+*.egg-info/
+.venv/
+coverage/
+
+# Test & browser artifacts
+test-results/
+playwright-report/
+
+# Local databases & runtime state
+*.db
+*.db-journal
+*.sqlite*
+e2e/.state.json
+
+# Env & secrets (example file is committed intentionally)
+.env
+.env.*
+!.env.example
+.dev.vars
+.wrangler/
+keychain-token-cache/
+
+# Personal AI-tooling config (not project code)
+.commandcode/
+
+# OS / editor
+.DS_Store
+*.log
+*.tsbuildinfo
+drizzle/

@@ -1,0 +1,1 @@
+{"compilerOptions": {"allowJs": true, "checkJs": false, "esModuleInterop": true, "jsx": "react-jsx", "lib": ["ES2022", "DOM", "DOM.Iterable"], "module": "ESNext", "moduleResolution": "Bundler", "resolveJsonModule": true, "skipLibCheck": true, "strict": true, "target": "ES2022"}, "exclude": ["node_modules", "dist", ".astro"]}

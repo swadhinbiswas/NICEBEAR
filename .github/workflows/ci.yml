@@ -1,0 +1,50 @@
+name: ci
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nicebear/shared-types typecheck
+      - run: pnpm --filter @nicebear/shared-types test
+      - run: pnpm --filter @nicebear/web typecheck
+      - run: pnpm --filter @nicebear/web test
+      - run: pnpm build
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.15.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @nicebear/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @nicebear/web test:e2e
+  sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-go@v5
+        with: { go-version: "1.23" }
+      - uses: dtolnay/rust-toolchain@stable
+        with: { components: clippy, rustfmt }
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: "8.3", extensions: curl, json }
+      - run: python3 -m pytest packages/sdk-python -q
+      - run: go test ./... && go vet ./...
+        working-directory: packages/sdk-go
+      - run: cargo test --locked && cargo clippy --all-targets -- -D warnings && cargo fmt --check
+        working-directory: packages/sdk-rust
+      - run: php -l src/Client.php && php -r 'require "src/Client.php"; $c = new NiceBear\Client("https://api.nicebear.dev", "nb_live_x"); echo $c->avatarUrl("av_1", "john"), "\n"; echo $c->dailyUrl("av_1"), "\n";'
+        working-directory: packages/sdk-php

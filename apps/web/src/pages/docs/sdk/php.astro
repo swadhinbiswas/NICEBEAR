@@ -1,0 +1,20 @@
+---
+const snippet = `composer require nicebear/nicebear-php
+
+$nb = new \\NiceBear\\Client('https://api.nicebear.dev', 'nb_live_...');
+echo $nb->avatarUrl('av_123', 'john'), "\\n";
+$av = $nb->createAvatar([
+    'type' => 'generated',
+    'engine' => 'minimal',
+]);
+echo $av['id'], "\\n";`;
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><title>PHP SDK — NiceBear</title></head>
+  <body><main>
+    <h1>PHP SDK</h1>
+    <p>PHP 8.1+ with ext-curl. Source: <code>packages/sdk-php</code>. Errors throw <code>\NiceBear\ApiError</code> with status + body.</p>
+    <pre><code>{snippet}</code></pre>
+  </main></body>
+</html>

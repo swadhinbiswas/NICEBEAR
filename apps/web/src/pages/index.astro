@@ -1,0 +1,25 @@
+---
+const engineCount = 13;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>NiceBear — Dynamic Avatar Infrastructure</title>
+  </head>
+  <body>
+    <main>
+      <h1>NiceBear</h1>
+      <p>Avatars are programmable assets, not static files: they rotate on schedules, rules, seeds, or events, served globally at edge speed.</p>
+      <ul>
+        <li><a href="/docs">Docs</a></li>
+        <li><a href="/docs/api">API reference</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+      <p>{engineCount} generative engines, pluggable via <code>src/lib/engines/</code>.</p>
+      <pre><code>GET /api/avatar/:id/daily
+GET /api/avatar/:id?seed=john</code></pre>
+    </main>
+  </body>
+</html>

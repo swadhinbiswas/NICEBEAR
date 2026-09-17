@@ -1,0 +1,1 @@
+{"autoload": {"psr-4": {"NiceBear\\": "src/"}}, "description": "NiceBear PHP SDK — Dynamic Avatar Infrastructure", "license": "Apache-2.0", "name": "nicebear/nicebear-php", "require": {"php": ">=8.1", "ext-curl": "*", "ext-json": "*"}, "type": "library"}

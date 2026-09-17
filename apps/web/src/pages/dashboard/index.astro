@@ -1,0 +1,21 @@
+---
+import { Playground } from "../../islands/Playground";
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Dashboard — NiceBear</title></head>
+  <body style="margin:0;background:#09090b">
+    <main style="max-width:64rem;margin:0 auto;padding:1.5rem 1rem;font-family:ui-sans-serif,system-ui,sans-serif;color:#f4f4f5">
+      <h1 style="font-size:1.25rem;font-weight:600">Dashboard</h1>
+      <ul style="display:flex;gap:1rem;flex-wrap:wrap;list-style:none;padding:0;margin:1rem 0">
+        <li><a style="color:#e4e4e7" href="/dashboard/collections">Collections</a></li>
+        <li><a style="color:#e4e4e7" href="/dashboard/api-keys">API keys</a></li>
+        <li><a style="color:#e4e4e7" href="/dashboard/webhooks">Webhooks</a></li>
+        <li><a style="color:#e4e4e7" href="/dashboard/analytics">Analytics</a></li>
+        <li><a style="color:#e4e4e7" href="/dashboard/team">Team</a></li>
+        <li><a style="color:#e4e4e7" href="/dashboard/support">Support</a></li>
+      </ul>
+      <Playground client:load />
+    </main>
+  </body>
+</html>

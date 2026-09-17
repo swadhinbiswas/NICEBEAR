@@ -1,0 +1,32 @@
+---
+const rt = (Astro.locals as unknown as { runtime?: { env?: Record<string, unknown> } })?.runtime?.env ?? {};
+const proc = (globalThis as unknown as { process?: { env?: Record<string, string | undefined> } }).process;
+const raw = rt["DONATE_URL"] ?? proc?.env?.["DONATE_URL"];
+const donateUrl = typeof raw === "string" && /^https?:\/\//.test(raw) ? raw : null;
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /><title>Support — NiceBear</title></head>
+  <body style="margin:0;background:#09090b;color:#f4f4f5;font-family:ui-sans-serif,system-ui,sans-serif">
+    <main style="max-width:40rem;margin:0 auto;padding:4rem 1rem;text-align:center">
+      <p><a style="color:#a1a1aa" href="/dashboard">← dashboard</a></p>
+      <h1 style="font-size:1.5rem;font-weight:600">NiceBear is free forever</h1>
+      <p style="color:#a1a1aa">No plans. No seats. No API tiers. No Stripe, no invoices, no paywalls —
+        every feature is available to every org, and you can self-host the whole
+        stack (see <code>docs/self-hosting.md</code>).</p>
+      {donateUrl ? (
+        <>
+          <p style="color:#a1a1aa">If NiceBear saves you time, consider buying the maintainers a coffee:</p>
+          <p><a
+            href={donateUrl}
+            rel="noopener noreferrer"
+            style="display:inline-block;background:#f4f4f5;color:#09090b;font-weight:600;border-radius:0.375rem;padding:0.6rem 1.4rem;text-decoration:none"
+          >Donate</a></p>
+          <p style="color:#52525b;font-size:0.8rem">Donations are voluntary gifts, not payments for service. Set <code>DONATE_URL</code> to your own sponsors page when self-hosting.</p>
+        </>
+      ) : (
+        <p style="color:#52525b;font-size:0.85rem">This instance has no donate link configured (set <code>DONATE_URL</code> to show one).</p>
+      )}
+    </main>
+  </body>
+</html>

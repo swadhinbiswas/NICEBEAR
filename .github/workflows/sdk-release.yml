@@ -1,0 +1,13 @@
+name: sdk-release
+on:
+  push:
+    tags: ["sdk-v*"]
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SDKs from OpenAPI
+        run: echo "openapi-generator-cli generate -i packages/openapi/spec.yaml (per language; full slice)"
+      - name: Publish JS SDK
+        run: echo "pnpm --filter @nicebear/sdk-js publish"

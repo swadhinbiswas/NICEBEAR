@@ -1,0 +1,21 @@
+---
+const snippet = `// Cargo.toml: nicebear = { path = "../sdk-rust" }
+let nb = nicebear::Client::new("https://api.nicebear.dev", Some("nb_live_..."));
+println!("{}", nb.avatar_url("av_123", Some("john"), None));
+let col = nb.create_collection("team-avatars", "pixel-art", None)?;
+let av = nb.create_avatar(&serde_json::json!({
+    "collection_id": col["id"],
+    "type": "generated",
+    "engine": "pixel-art",
+}))?;
+println!("{}", av["id"]);`;
+---
+
+<html lang="en">
+  <head><meta charset="utf-8" /><title>Rust SDK — NiceBear</title></head>
+  <body><main>
+    <h1>Rust SDK</h1>
+    <p>Blocking client on reqwest. Source: <code>packages/sdk-rust</code>. Errors are <code>nicebear::Error::Http</code>.</p>
+    <pre><code>{snippet}</code></pre>
+  </main></body>
+</html>
