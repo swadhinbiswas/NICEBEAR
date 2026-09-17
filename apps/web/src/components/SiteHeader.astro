@@ -1,0 +1,39 @@
+---
+/** Site-wide header. `active` highlights the current section. */
+interface Props {
+  active?: "playground" | "styles" | "animated" | "docs";
+}
+const { active } = Astro.props;
+const link = (id: string) =>
+  `color:${active === id ? "#fafafa" : "#a1a1aa"};text-decoration:none;font-size:.9rem;font-weight:${active === id ? 600 : 400}`;
+---
+
+<header
+  style="position:sticky;top:0;z-index:20;backdrop-filter:blur(12px);background:rgba(9,9,11,.78);border-bottom:1px solid #27272a"
+>
+  <nav style="max-width:72rem;margin:0 auto;padding:.75rem 1rem;display:flex;align-items:center;gap:1.25rem">
+    <a href="/" style="color:#fafafa;font-weight:700;text-decoration:none;font-size:1.05rem;display:flex;align-items:center;gap:.5rem">
+      <span style="display:inline-block;width:1.4rem;height:1.4rem;border-radius:.4rem;background:linear-gradient(135deg,#a5b4fc,#67e8f9)"></span>
+      NiceBear
+    </a>
+    <span style="flex:1"></span>
+    <a class="navlink" href="/#playground" style={link("playground")}>Playground</a>
+    <a class="navlink" href="/styles" style={link("styles")}>Styles</a>
+    <a class="navlink" href="/styles#animated" style={link("animated")}>Animated</a>
+    <a class="navlink" href="/docs" style={link("docs")}>Docs</a>
+    <a class="navlink" href="/dashboard" style="color:#a1a1aa;text-decoration:none;font-size:.9rem">Dashboard</a>
+    <a
+      href="/dashboard/support"
+      style="border:1px solid #3f3f46;border-radius:.375rem;padding:.35rem .8rem;color:#fafafa;text-decoration:none;font-size:.9rem"
+      >Support</a
+    >
+  </nav>
+</header>
+
+<style>
+  @media (max-width: 720px) {
+    .navlink {
+      display: none;
+    }
+  }
+</style>

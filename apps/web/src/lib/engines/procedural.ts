@@ -9,46 +9,6 @@ function svg(inner: string, bg: string, size = 100): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" fill="${bg}"/>${inner}</svg>`;
 }
 
-/** Robot head — antenna style + eye layout vary by seed. */
-export const robotsEngine: AvatarEngine = {
-  id: "robots",
-  kind: "svg",
-  generate(seed: string): string {
-    const h = hashStringToUint32(`robots:${seed}`);
-    const body = `hsl(${hue(seed, "rb")} 60% 55%)`;
-    const dark = `hsl(${hue(seed, "rb")} 45% 30%)`;
-    const antenna = h % 2 === 0
-      ? `<line x1="50" y1="18" x2="50" y2="30" stroke="${dark}" stroke-width="4"/><circle cx="50" cy="14" r="5" fill="#f87171"/>`
-      : `<line x1="38" y1="20" x2="44" y2="30" stroke="${dark}" stroke-width="4"/><line x1="62" y1="20" x2="56" y2="30" stroke="${dark}" stroke-width="4"/>`;
-    const eyes = h % 3 === 0
-      ? `<circle cx="38" cy="48" r="6" fill="#0f172a"/><circle cx="62" cy="48" r="6" fill="#0f172a"/><circle cx="40" cy="46" r="2" fill="#fff"/><circle cx="64" cy="46" r="2" fill="#fff"/>`
-      : `<rect x="32" y="43" width="14" height="10" rx="3" fill="#0f172a"/><rect x="54" y="43" width="14" height="10" rx="3" fill="#0f172a"/>`;
-    const mouth = `<rect x="40" y="64" width="20" height="5" rx="2.5" fill="${dark}"/>`;
-    return svg(`${antenna}<rect x="25" y="30" width="50" height="48" rx="10" fill="${body}"/>${eyes}${mouth}`, `hsl(${hue(seed, "rbg")} 30% 14%)`);
-  },
-};
-
-/** Cartoon face — smile + eye variants. */
-export const cartoonEngine: AvatarEngine = {
-  id: "cartoon",
-  kind: "svg",
-  generate(seed: string): string {
-    const h = hashStringToUint32(`cartoon:${seed}`);
-    const skin = `hsl(${20 + (h % 30)} 70% ${55 + (h % 20)}%)`;
-    const hair = `hsl(${hue(seed, "ch")} 60% 30%)`;
-    const eyes = h % 2 === 0
-      ? `<circle cx="38" cy="48" r="5" fill="#1f2937"/><circle cx="62" cy="48" r="5" fill="#1f2937"/><circle cx="39.5" cy="46.5" r="1.6" fill="#fff"/><circle cx="63.5" cy="46.5" r="1.6" fill="#fff"/>`
-      : `<path d="M32 48 q6 -6 12 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M56 48 q6 -6 12 0" stroke="#1f2937" stroke-width="3" fill="none" stroke-linecap="round"/>`;
-    const smile = h % 3 === 0
-      ? `<path d="M38 66 q12 10 24 0" stroke="#1f2937" stroke-width="3.5" fill="none" stroke-linecap="round"/>`
-      : `<ellipse cx="50" cy="68" rx="7" ry="5" fill="#1f2937"/>`;
-    return svg(
-      `<path d="M22 42 q-2 -26 28 -26 t28 26 l-6 4 q4 -22 -22 -22 t-22 22 z" fill="${hair}"/><ellipse cx="50" cy="55" rx="27" ry="30" fill="${skin}"/>${eyes}<circle cx="30" cy="60" r="4" fill="#f9a8d4" opacity="0.7"/><circle cx="70" cy="60" r="4" fill="#f9a8d4" opacity="0.7"/>${smile}`,
-      `hsl(${hue(seed, "cbg")} 50% 90%)`,
-    );
-  },
-};
-
 /** Anime face — big eyes, blush, hair fringe. */
 export const animeEngine: AvatarEngine = {
   id: "anime",

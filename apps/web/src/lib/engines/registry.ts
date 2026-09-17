@@ -1,5 +1,5 @@
 import { blinkEngine, orbEngine, rainEngine } from "./animated";
-import { bauhausEngine, droidsEngine, orbitsEngine, personasEngine, ringsEngine, wavesEngine } from "./gallery";
+import { bauhausEngine, droidsEngine, orbitsEngine, ringsEngine, wavesEngine } from "./gallery";
 import { geometricEngine } from "./geometric";
 import { identiconEngine } from "./identicon";
 import { pixelArtEngine } from "./pixel-art";
@@ -8,13 +8,19 @@ import {
   animeEngine,
   animalsEngine,
   businessEngine,
-  cartoonEngine,
   cyberpunkEngine,
   fantasyEngine,
   gamingEngine,
   minimalEngine,
-  robotsEngine,
 } from "./procedural";
+import {
+  cartoonEngineV2,
+  inkwellEngine,
+  notionalEngine,
+  personasEngineV2,
+  questsEngine,
+  robotsEngineV2,
+} from "./studio";
 import { hashStringToUint32 } from "../rotation/hash";
 import type { AnimatedEngine, AvatarEngine } from "./types";
 
@@ -26,8 +32,8 @@ const engines = new Map<string, AvatarEngine>([
   [identiconEngine.id, identiconEngine],
   [pixelArtEngine.id, pixelArtEngine],
   [geometricEngine.id, geometricEngine],
-  [robotsEngine.id, robotsEngine],
-  [cartoonEngine.id, cartoonEngine],
+  [robotsEngineV2.id, robotsEngineV2],
+  [cartoonEngineV2.id, cartoonEngineV2],
   [animeEngine.id, animeEngine],
   [minimalEngine.id, minimalEngine],
   [businessEngine.id, businessEngine],
@@ -36,7 +42,10 @@ const engines = new Map<string, AvatarEngine>([
   [cyberpunkEngine.id, cyberpunkEngine],
   [abstractEngine.id, abstractEngine],
   [animalsEngine.id, animalsEngine],
-  [personasEngine.id, personasEngine],
+  [personasEngineV2.id, personasEngineV2],
+  [questsEngine.id, questsEngine],
+  [inkwellEngine.id, inkwellEngine],
+  [notionalEngine.id, notionalEngine],
   [droidsEngine.id, droidsEngine],
   [bauhausEngine.id, bauhausEngine],
   [ringsEngine.id, ringsEngine],

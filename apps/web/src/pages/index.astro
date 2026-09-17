@@ -1,25 +1,243 @@
 ---
-const engineCount = 13;
+export const prerender = true;
+
+import AvatarTile from "../components/AvatarTile.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import { SeedExplorer } from "../islands/SeedExplorer";
+import { LandingPlayground } from "../islands/LandingPlayground";
+import { STYLES, STYLE_COUNT, GIF_STYLE_COUNT, SVG_STYLE_COUNT, stylesByCategory } from "../lib/engines/catalog";
+
+const SEED = "nicebear";
+const groups = stylesByCategory();
+const animated = STYLES.filter((s) => s.category === "animated");
+const featured = [
+  "personas", "inkwell", "quests", "robots", "anime", "notional",
+  "cartoon", "droids", "animals", "fantasy", "business", "gaming",
+  "cyberpunk", "bauhaus", "rings", "orbits", "waves", "geometric",
+].map((id) => STYLES.find((s) => s.id === id)!);
+
+const useCases = [
+  {
+    title: "User profiles",
+    body: "Every account gets a distinct face from day one. No upload step, no gray silhouette fallback.",
+    seeds: ["Mia", "Bee", "Theo", "Sage"],
+  },
+  {
+    title: "Chat & comments",
+    body: "Deterministic from a user id, so a person looks the same in every thread, on every device.",
+    seeds: ["Noor", "Ivo", "Kai", "Zoe"],
+  },
+  {
+    title: "Gaming & NPCs",
+    body: "Millions of unique characters generated on demand — identical every session from the same seed.",
+    seeds: ["Nyx", "Zap", "Rex", "Pip"],
+  },
+  {
+    title: "Team tools",
+    body: "Visual distinction in cursors, mentions, and sidebars. Animated styles for presence.",
+    seeds: ["Lex", "Mae", "Sam", "Avery"],
+  },
+];
+
+const curl = `curl "https://api.nicebear.dev/api/avatar/av_123?seed=john&format=svg" -o avatar.svg`;
+const rule = `# Rotate a profile picture on a schedule — weekends get a different avatar
+curl -X POST https://api.nicebear.dev/api/rotation-rules \\
+  -H "Authorization: Bearer $NICEBEAR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "target_id": "av_123",
+    "target_type": "avatar",
+    "rule": {
+      "type": "composite",
+      "priority": "first_match",
+      "rules": [
+        { "when": "is_weekend",   "avatar": "av_party" },
+        { "when": "weekday:mon",  "avatar": "av_monday" },
+        { "when": "every:3d",     "avatar_from": "collection:team_avatars" }
+      ]
+    }
+  }'`;
 ---
 
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
-    <title>NiceBear — Dynamic Avatar Infrastructure</title>
+    <meta
+      name="description"
+      content={`NiceBear — programmable avatars. ${STYLE_COUNT} procedural styles (SVG, PNG, animated GIF), rotation rules on schedules and events, served from the edge. Free forever.`}
+    />
+    <title>NiceBear — Programmable Avatars</title>
   </head>
-  <body>
-    <main>
-      <h1>NiceBear</h1>
-      <p>Avatars are programmable assets, not static files: they rotate on schedules, rules, seeds, or events, served globally at edge speed.</p>
-      <ul>
-        <li><a href="/docs">Docs</a></li>
-        <li><a href="/docs/api">API reference</a></li>
-        <li><a href="/dashboard">Dashboard</a></li>
-      </ul>
-      <p>{engineCount} generative engines, pluggable via <code>src/lib/engines/</code>.</p>
-      <pre><code>GET /api/avatar/:id/daily
-GET /api/avatar/:id?seed=john</code></pre>
+  <body style="margin:0;background:#09090b;color:#f4f4f5;font-family:ui-sans-serif,system-ui,sans-serif">
+    <div style="position:fixed;inset:0;background:radial-gradient(64rem 32rem at 50% -12%,#1f2430 0%,transparent 62%);pointer-events:none"></div>
+    <SiteHeader active="playground" />
+
+    <main style="position:relative;max-width:72rem;margin:0 auto;padding:0 1rem 3rem">
+      <section style="text-align:center;padding:4.5rem 0 3rem">
+        <p style="display:inline-block;border:1px solid #3f3f46;border-radius:999px;padding:.28rem .95rem;font-size:.8rem;color:#a1a1aa">
+          Free forever · Open source · Self-hostable · No signup to try
+        </p>
+        <h1 style="font-size:clamp(2.4rem,6.5vw,4.2rem);line-height:1.03;margin:1.4rem 0 .9rem;letter-spacing:-.03em">
+          Pick a seed.<br /><span style="background:linear-gradient(90deg,#a5b4fc,#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent">Get an avatar.</span>
+        </h1>
+        <p style="color:#a1a1aa;font-size:1.12rem;max-width:40rem;margin:0 auto;line-height:1.65">
+          {STYLE_COUNT} procedural styles — from character illustrations to line art and loops — plus the part
+          no avatar library has: <strong style="color:#e4e4e7">rules that rotate them</strong> on schedules,
+          events, or per-user seeds, served from the edge in milliseconds.
+        </p>
+        <p style="margin-top:1.9rem;display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+          <a href="#playground" style="background:#f4f4f5;color:#09090b;font-weight:600;border-radius:.55rem;padding:.75rem 1.6rem;text-decoration:none">Try the playground</a>
+          <a href="/styles" style="border:1px solid #3f3f46;border-radius:.55rem;padding:.75rem 1.6rem;color:#fafafa;text-decoration:none">Browse {STYLE_COUNT} styles</a>
+        </p>
+        <div style="display:flex;gap:.75rem;justify-content:center;margin-top:2.75rem;flex-wrap:wrap">
+          {STYLES.slice(0, 8).map((meta, i) => (
+            <div style={`transform:rotate(${(i % 2 === 0 ? -1 : 1) * 3}deg)`}>
+              <AvatarTile style={meta} seed={`${SEED}-${meta.id}`} size={88} link={false} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style="margin-bottom:4rem">
+        <div style="display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:2rem;align-items:center;margin-bottom:1.5rem">
+          <div>
+            <h2 style="font-size:clamp(1.5rem,3vw,2.1rem);margin:0 0 .6rem;letter-spacing:-.02em">Same seed, same avatar. Every time.</h2>
+            <p style="color:#a1a1aa;margin:0;line-height:1.65">
+              Use any string as a seed — a username, an email, a user id — and NiceBear draws the identical
+              avatar on every platform, forever. Change one character and you get a different person.
+            </p>
+          </div>
+          <p style="color:#52525b;font-size:.85rem;margin:0;font-family:ui-monospace,monospace">
+            deterministic · privacy-friendly (never sent anywhere until you ask) · {STYLE_COUNT} pure functions
+          </p>
+        </div>
+        <SeedExplorer client:load />
+      </section>
+
+      <section id="playground" style="margin-bottom:4rem;scroll-margin-top:4.5rem">
+        <h2 style="font-size:1.5rem;margin:0 0 .3rem">Playground</h2>
+        <p style="color:#a1a1aa;margin:0 0 1.1rem">
+          Explore styles, formats, and seeds. Everything renders in your browser; the embed snippet is the
+          hosted API equivalent.
+        </p>
+        <LandingPlayground client:load />
+      </section>
+
+      <section id="styles" style="margin-bottom:4rem;scroll-margin-top:4.5rem">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div>
+            <h2 style="font-size:1.5rem;margin:0 0 .3rem">{STYLE_COUNT} styles. One API.</h2>
+            <p style="color:#a1a1aa;margin:0">
+              {SVG_STYLE_COUNT} static (SVG + PNG) · {GIF_STYLE_COUNT} animated (GIF) · all procedural, all deterministic.
+            </p>
+          </div>
+          <a href="/styles" style="color:#d4d4d8;font-size:.9rem;text-decoration:none">Browse all →</a>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(7.5rem,1fr));gap:.75rem;margin-top:1.25rem">
+          {featured.map((meta) => (
+            <AvatarTile style={meta} seed={`${SEED}-${meta.id}`} size={120} label />
+          ))}
+        </div>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem">
+          {groups.map((g) => (
+            <a href={`/styles#${g.category}`} style="border:1px solid #3f3f46;border-radius:999px;padding:.25rem .7rem;color:#a1a1aa;font-size:.8rem;text-decoration:none">
+              {g.label} · {g.styles.length}
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section id="animated" style="margin-bottom:4rem;scroll-margin-top:4.5rem">
+        <h2 style="font-size:1.5rem;margin:0 0 .3rem">They move, too</h2>
+        <p style="color:#a1a1aa;margin:0 0 1.25rem">
+          Animated styles are real looping GIFs — deterministic per seed, cached at the edge like everything
+          else, and they drop into an <code>&lt;img&gt;</code> with no player.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:1rem">
+          {animated.map((meta) => (
+            <a href={`/styles/${meta.id}`} style="text-decoration:none;color:inherit;border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e;display:grid;gap:.75rem;justify-items:center">
+              <AvatarTile style={meta} seed={`${SEED}-${meta.id}`} size={140} link={false} />
+              <div style="font-weight:600">{meta.name}</div>
+              <p style="margin:0;color:#a1a1aa;font-size:.82rem;text-align:center">{meta.description}</p>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section style="margin-bottom:4rem">
+        <h2 style="font-size:1.5rem;margin:0 0 1.25rem">Built for every application</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:.875rem">
+          {useCases.map((uc) => (
+            <div style="border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e">
+              <div style="display:flex;gap:.4rem;margin-bottom:.875rem">
+                {uc.seeds.map((seed) => (
+                  <AvatarTile style={STYLES.find((s) => s.id === "personas")!} seed={`${seed}-uc`} size={44} link={false} />
+                ))}
+              </div>
+              <h3 style="margin:0 0 .35rem;font-size:1rem">{uc.title}</h3>
+              <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.55">{uc.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style="margin-bottom:4rem">
+        <h2 style="font-size:1.5rem;margin:0 0 .35rem">Then make them programmable</h2>
+        <p style="color:#a1a1aa;margin:0 0 1.25rem">
+          NiceBear's rotation DSL is what turns avatars into infrastructure: first-match rules across
+          weekday, time-of-day, weekend, holiday, cron, and interval — evaluated at the edge and cached
+          until the next boundary.
+        </p>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:1rem">
+          <div style="border:1px solid #27272a;border-radius:1rem;background:#0c0c0e;padding:1.1rem">
+            <h3 style="margin:0 0 .5rem;font-size:.95rem;color:#d4d4d8">Serve an avatar</h3>
+            <pre style="background:#000;border-radius:.5rem;padding:.9rem;overflow:auto;font-size:.8rem;color:#6ee7b7;margin:0 0 1.1rem">{curl}</pre>
+            <h3 style="margin:0 0 .5rem;font-size:.95rem;color:#d4d4d8">JavaScript</h3>
+            <pre style="background:#000;border-radius:.5rem;padding:.9rem;overflow:auto;font-size:.8rem;color:#a5b4fc;margin:0">{`import { NiceBear } from "@nicebear/sdk-js";
+const nb = new NiceBear({ apiKey: process.env.NICEBEAR_API_KEY });
+const url = nb.dailyUrl("av_123");   // rotates at midnight
+const png = nb.avatarUrl("av_123", { seed: "john" });`}</pre>
+          </div>
+          <div style="border:1px solid #27272a;border-radius:1rem;background:#0c0c0e;padding:1.1rem">
+            <h3 style="margin:0 0 .5rem;font-size:.95rem;color:#d4d4d8">Rotation rules</h3>
+            <pre style="background:#000;border-radius:.5rem;padding:.9rem;overflow:auto;font-size:.8rem;color:#fcd34d;margin:0">{rule}</pre>
+          </div>
+        </div>
+      </section>
+
+      <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:.875rem;margin-bottom:4rem">
+        <div style="border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e">
+          <h3 style="margin:0 0 .4rem;font-size:1rem">Edge-fast</h3>
+          <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.55">Two-tier cache: rotation decisions in KV, bytes on the CDN. Versioned reads are immutable.</p>
+        </div>
+        <div style="border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e">
+          <h3 style="margin:0 0 .4rem;font-size:1rem">Rights-safe by construction</h3>
+          <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.55">Generated, uploaded by you, or rights-attested links only. No scraping, no imports, enforced in the API.</p>
+        </div>
+        <div style="border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e">
+          <h3 style="margin:0 0 .4rem;font-size:1rem">5 SDKs + CLI</h3>
+          <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.55">JavaScript, Python, Go, Rust, PHP, and a full command line — all on one OpenAPI contract.</p>
+        </div>
+        <div style="border:1px solid #27272a;border-radius:1rem;padding:1.25rem;background:#0c0c0e">
+          <h3 style="margin:0 0 .4rem;font-size:1rem">Storage your way</h3>
+          <p style="margin:0;color:#a1a1aa;font-size:.88rem;line-height:1.55">GitHub + jsDelivr by default, or Hugging Face Storage Buckets via the S3 gateway.</p>
+        </div>
+      </section>
+
+      <section style="text-align:center;border:1px solid #27272a;border-radius:1.25rem;padding:3rem 1.5rem;background:linear-gradient(180deg,#101013,#09090b)">
+        <h2 style="margin:0 0 .6rem;font-size:clamp(1.5rem,3vw,2rem);letter-spacing:-.02em">Free and open source. Forever.</h2>
+        <p style="color:#a1a1aa;margin:0 auto 1.5rem;max-width:34rem">
+          No plans, no seats, no API tiers. Self-host the whole stack, or use the hosted API and donate if it
+          saves you time.
+        </p>
+        <p style="margin:0;display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap">
+          <a href="/dashboard" style="background:#f4f4f5;color:#09090b;font-weight:600;border-radius:.55rem;padding:.75rem 1.6rem;text-decoration:none">Open the dashboard</a>
+          <a href="/dashboard/support" style="border:1px solid #3f3f46;border-radius:.55rem;padding:.75rem 1.6rem;color:#fafafa;text-decoration:none">Support the project</a>
+        </p>
+      </section>
     </main>
+    <SiteFooter />
   </body>
 </html>

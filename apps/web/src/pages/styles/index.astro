@@ -1,0 +1,73 @@
+---
+export const prerender = true;
+
+import AvatarTile from "../../components/AvatarTile.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import { STYLES, STYLE_COUNT, stylesByCategory } from "../../lib/engines/catalog";
+
+const SEEDS = ["Mia", "Felix", "Juno", "Rowan"];
+const groups = stylesByCategory();
+const animated = STYLES.filter((s) => s.category === "animated");
+const staticCount = STYLE_COUNT - animated.length;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta
+      name="description"
+      content={`Browse all ${STYLE_COUNT} NiceBear avatar styles — characters, line art, abstract, pixel, and animated GIF. Every style is procedural and deterministic.`}
+    />
+    <title>Avatar Styles — NiceBear</title>
+  </head>
+  <body style="margin:0;background:#09090b;color:#f4f4f5;font-family:ui-sans-serif,system-ui,sans-serif">
+    <SiteHeader active="styles" />
+    <main style="max-width:72rem;margin:0 auto;padding:0 1rem 3rem">
+      <section style="padding:3rem 0 1.5rem">
+        <h1 style="font-size:clamp(1.9rem,4vw,2.8rem);margin:0 0 .5rem;letter-spacing:-.02em">
+          {STYLE_COUNT} avatar styles
+        </h1>
+        <p style="color:#a1a1aa;margin:0;max-width:44rem">
+          {staticCount} static styles (SVG + PNG) and {animated.length} animated loops (GIF). Every style is
+          procedural and deterministic — the same seed draws the identical avatar everywhere, forever.
+          Click any style for its API URL and embed snippets.
+        </p>
+      </section>
+
+      {
+        groups.map((group) => (
+          <section id={group.category} style="padding:1.25rem 0 1.75rem;scroll-margin-top:4.5rem">
+            <h2 style="font-size:1.15rem;margin:0 0 .15rem">{group.label}</h2>
+            <p style="color:#71717a;font-size:.85rem;margin:0 0 1rem">
+              {group.styles.length} style{group.styles.length === 1 ? "" : "s"}
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:.875rem">
+              {group.styles.map((meta) => (
+                <a
+                  href={`/styles/${meta.id}`}
+                  style="text-decoration:none;color:inherit;border:1px solid #27272a;border-radius:.875rem;padding:.875rem;background:#0c0c0e;display:grid;gap:.6rem"
+                >
+                  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem">
+                    {SEEDS.slice(0, 4).map((seed) => (
+                      <AvatarTile style={meta} seed={`${seed}-${meta.id}`} size={64} link={false} />
+                    ))}
+                  </div>
+                  <div>
+                    <div style="font-weight:600;font-size:.95rem">{meta.name}</div>
+                    <div style="font-family:ui-monospace,monospace;font-size:.72rem;color:#71717a">
+                      {meta.id} · {meta.formats.join(" / ")}
+                    </div>
+                  </div>
+                  <p style="margin:0;color:#a1a1aa;font-size:.8rem;line-height:1.45">{meta.description}</p>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))
+      }
+    </main>
+    <SiteFooter />
+  </body>
+</html>

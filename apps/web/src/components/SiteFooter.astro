@@ -1,0 +1,67 @@
+---
+import { STYLE_COUNT, GIF_STYLE_COUNT } from "../lib/engines/catalog";
+
+const cols: Array<{ title: string; links: Array<{ label: string; href: string }> }> = [
+  {
+    title: "Explore",
+    links: [
+      { label: "All styles", href: "/styles" },
+      { label: "Animated avatars", href: "/styles#animated" },
+      { label: "Playground", href: "/#playground" },
+      { label: "API reference", href: "/docs/api" },
+    ],
+  },
+  {
+    title: "Build",
+    links: [
+      { label: "Documentation", href: "/docs" },
+      { label: "JavaScript SDK", href: "/docs/sdk/javascript" },
+      { label: "Python SDK", href: "/docs/sdk/python" },
+      { label: "Go / Rust / PHP SDKs", href: "/docs" },
+    ],
+  },
+  {
+    title: "Project",
+    links: [
+      { label: "Dashboard", href: "/dashboard" },
+      { label: "Self-hosting", href: "/docs" },
+      { label: "Support NiceBear", href: "/dashboard/support" },
+      { label: "GitHub", href: "https://github.com/swadhinbiswas/NICEBEAR" },
+    ],
+  },
+];
+---
+
+<footer style="border-top:1px solid #27272a;margin-top:2rem">
+  <div style="max-width:72rem;margin:0 auto;padding:2.5rem 1rem;display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:1.5rem">
+    <div>
+      <div style="display:flex;align-items:center;gap:.5rem;color:#fafafa;font-weight:700">
+        <span style="display:inline-block;width:1.3rem;height:1.3rem;border-radius:.375rem;background:linear-gradient(135deg,#a5b4fc,#67e8f9)"></span>
+        NiceBear
+      </div>
+      <p style="color:#71717a;font-size:.85rem;margin:.75rem 0 0;max-width:18rem">
+        Programmable avatars that rotate on schedules, rules, seeds, or events. {STYLE_COUNT} styles,
+        {GIF_STYLE_COUNT} of them animated. Free forever.
+      </p>
+    </div>
+    {
+      cols.map((col) => (
+        <div>
+          <div style="color:#d4d4d8;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:.05em">
+            {col.title}
+          </div>
+          <ul style="list-style:none;padding:0;margin:.75rem 0 0;display:grid;gap:.4rem">
+            {col.links.map((l) => (
+              <li>
+                <a href={l.href} style="color:#a1a1aa;font-size:.85rem;text-decoration:none">{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+  <div style="border-top:1px solid #18181b;max-width:72rem;margin:0 auto;padding:1rem;color:#52525b;font-size:.8rem">
+    Open source · MIT licensed · Self-hostable · Content policy: generated, uploaded, or rights-attested only
+  </div>
+</footer>

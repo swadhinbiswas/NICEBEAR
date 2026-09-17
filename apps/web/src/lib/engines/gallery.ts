@@ -15,34 +15,6 @@ function svg(inner: string, bg: string): string {
 }
 
 /** Flat-style person: skin, hair, eyes, smile, shirt. */
-export const personasEngine: AvatarEngine = {
-  id: "personas",
-  kind: "svg",
-  generate(seed: string): string {
-    const h = hashStringToUint32(`personas:${seed}`);
-    const skin = `hsl(${18 + (h % 26)} 62% ${52 + (h % 22)}%)`;
-    const hair = `hsl(${hue(seed, "ph")} 55% ${18 + (h % 30)}%)`;
-    const shirt = `hsl(${hue(seed, "ps")} 60% 50%)`;
-    const hairdos = [
-      `<path d="M24 44 q-4 -28 26 -30 t26 30 l-7 3 q5 -24 -19 -25 t-19 25 z" fill="${hair}"/>`,
-      `<rect x="24" y="14" width="52" height="20" rx="9" fill="${hair}"/><path d="M24 44 q-2 -18 10 -24 l44 4 q6 8 4 20 z" fill="${hair}"/>`,
-      `<circle cx="50" cy="26" r="20" fill="${hair}"/><circle cx="50" cy="44" r="17" fill="${skin}"/>`,
-    ];
-    const hairSvg = hairdos[h % hairdos.length]!;
-    const glasses = h % 3 === 0;
-    const eyes = glasses
-      ? `<circle cx="40" cy="52" r="7" fill="none" stroke="#111827" stroke-width="2.5"/><circle cx="60" cy="52" r="7" fill="none" stroke="#111827" stroke-width="2.5"/><line x1="47" y1="52" x2="53" y2="52" stroke="#111827" stroke-width="2.5"/><circle cx="40" cy="52" r="2.2" fill="#111827"/><circle cx="60" cy="52" r="2.2" fill="#111827"/>`
-      : `<circle cx="40" cy="52" r="3.4" fill="#111827"/><circle cx="60" cy="52" r="3.4" fill="#111827"/>`;
-    return svg(
-      `<rect x="22" y="72" width="56" height="28" rx="8" fill="${shirt}"/>` +
-        `<ellipse cx="50" cy="52" rx="24" ry="27" fill="${skin}"/>${hairSvg}${eyes}` +
-        `<path d="M41 66 q9 ${6 + (h % 6)} 18 0" stroke="#7c2d12" stroke-width="3" fill="none" stroke-linecap="round"/>`,
-      `hsl(${hue(seed, "pbg")} 45% 90%)`,
-    );
-  },
-};
-
-/** Cute droid: dome, visor, body, antenna arms. */
 export const droidsEngine: AvatarEngine = {
   id: "droids",
   kind: "svg",

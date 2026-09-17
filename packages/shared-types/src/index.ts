@@ -35,6 +35,9 @@ export const EngineTypeSchema = z.enum([
   "mixed",
   // Static DiceBear-grade styles (SVG).
   "personas",
+  "quests",
+  "inkwell",
+  "notional",
   "droids",
   "bauhaus",
   "rings",

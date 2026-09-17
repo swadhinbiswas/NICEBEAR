@@ -1,0 +1,38 @@
+---
+import { getAnimated, getEngine } from "../lib/engines/registry";
+import type { StyleMeta } from "../lib/engines/catalog";
+
+interface Props {
+  style: StyleMeta;
+  seed: string;
+  size?: number;
+  link?: boolean;
+  label?: boolean;
+}
+
+const { style, seed, size = 96, link = true, label = false } = Astro.props;
+
+const inner =
+  style.kind === "gif"
+    ? `<img src="data:image/gif;base64,${Buffer.from(getAnimated(style.id)!.generate(seed)).toString("base64")}" alt="${style.name} avatar" style="display:block;width:100%;height:100%;image-rendering:pixelated" />`
+    : (getEngine(style.id)?.generate(seed) ?? "");
+
+const boxStyle = `width:${size}px;height:${size}px;border-radius:${Math.round(size / 6)}px;overflow:hidden;border:1px solid #27272a;background:#111;flex:0 0 auto`;
+const caption = label
+  ? `<span style="font-family:ui-monospace,monospace;font-size:.72rem;color:#a1a1aa">${style.id}</span>`
+  : "";
+---
+
+{
+  link ? (
+    <a href={`/styles/${style.id}`} style="text-decoration:none;color:inherit;display:grid;gap:.4rem;justify-items:center">
+      <span style={boxStyle} set:html={inner} />
+      <Fragment set:html={caption} />
+    </a>
+  ) : (
+    <span style="display:grid;gap:.4rem;justify-items:center">
+      <span style={boxStyle} set:html={inner} />
+      <Fragment set:html={caption} />
+    </span>
+  )
+}

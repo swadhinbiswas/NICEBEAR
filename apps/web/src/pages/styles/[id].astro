@@ -1,0 +1,106 @@
+---
+export const prerender = true;
+
+import AvatarTile from "../../components/AvatarTile.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import { CATEGORY_LABELS, STYLES, findStyle } from "../../lib/engines/catalog";
+
+export function getStaticPaths() {
+  return STYLES.map((style) => ({ params: { id: style.id } }));
+}
+
+const { id } = Astro.params;
+const meta = findStyle(id ?? "");
+if (!meta) throw new Error(`unknown style: ${id}`);
+
+const SEEDS = ["Mia", "Felix", "Juno", "Rowan", "Zoe", "Kai", "Noor", "Ivo"];
+const related = STYLES.filter((s) => s.category === meta.category && s.id !== meta.id).slice(0, 5);
+
+const apiPath =
+  meta.kind === "gif"
+    ? `/api/avatar/av_123?seed=Felix&format=gif`
+    : `/api/avatar/av_123?seed=Felix&format=svg`;
+const curl = `# Any seed you like — usernames, emails, user IDs
+curl "https://api.nicebear.dev${apiPath}" -o avatar.${meta.kind === "gif" ? "gif" : "svg"}${
+  meta.kind === "svg" ? `\n\n# Rasterize to PNG (16–1024px)\ncurl "https://api.nicebear.dev/api/avatar/av_123?seed=Felix&format=png&w=256" -o avatar.png` : ""
+}`;
+const embed = `<img src="https://api.nicebear.dev${apiPath}" alt="avatar" width="128" height="128" />`;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={`${meta.name} — ${meta.description} Deterministic ${meta.kind.toUpperCase()} avatars from any seed.`} />
+    <title>{meta.name} — NiceBear Avatar Style</title>
+  </head>
+  <body style="margin:0;background:#09090b;color:#f4f4f5;font-family:ui-sans-serif,system-ui,sans-serif">
+    <SiteHeader active="styles" />
+    <main style="max-width:72rem;margin:0 auto;padding:0 1rem 3rem">
+      <p style="padding:1.5rem 0 0;margin:0">
+        <a href="/styles" style="color:#a1a1aa;text-decoration:none;font-size:.85rem">← All styles</a>
+      </p>
+
+      <section style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:2rem;padding:1.5rem 0 2.5rem;align-items:start">
+        <div>
+          <div style="border:1px solid #27272a;border-radius:1.25rem;background:linear-gradient(180deg,#101013,#09090b);padding:1.5rem;display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem">
+            {SEEDS.map((seed) => (
+              <AvatarTile style={meta} seed={`${seed}-${meta.id}`} size={128} link={false} />
+            ))}
+          </div>
+          <p style="color:#71717a;font-size:.8rem;margin:.75rem 0 0">
+            Eight seeds, eight distinct avatars — same seed always returns the same avatar.
+          </p>
+        </div>
+
+        <div>
+          <span style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:#a1a1aa">
+            {CATEGORY_LABELS[meta.category]}
+          </span>
+          <h1 style="font-size:clamp(1.8rem,4vw,2.6rem);margin:.25rem 0 .5rem;letter-spacing:-.02em">{meta.name}</h1>
+          <p style="color:#d4d4d8;margin:0 0 1rem;line-height:1.6">{meta.description}</p>
+
+          <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem;font-family:ui-monospace,monospace;font-size:.75rem">
+            {meta.formats.map((f) => (
+              <span style="border:1px solid #3f3f46;border-radius:999px;padding:.2rem .6rem;color:#d4d4d8">{f}</span>
+            ))}
+            {meta.kind === "gif" && (
+              <span style="border:1px solid #3f3f46;border-radius:999px;padding:.2rem .65rem;color:#a1a1aa">loops forever</span>
+            )}
+          </div>
+
+          <h2 style="font-size:.95rem;color:#d4d4d8;margin:0 0 .4rem">HTTP API</h2>
+          <pre style="background:#000;border:1px solid #1f1f23;border-radius:.6rem;padding:.9rem;overflow:auto;font-size:.78rem;color:#6ee7b7;margin:0 0 1.25rem">{curl}</pre>
+
+          <h2 style="font-size:.95rem;color:#d4d4d8;margin:0 0 .4rem">Embed</h2>
+          <pre style="background:#000;border:1px solid #1f1f23;border-radius:.6rem;padding:.9rem;overflow:auto;font-size:.78rem;color:#a5b4fc;margin:0 0 1.25rem">{embed}</pre>
+
+          <p style="color:#71717a;font-size:.82rem;margin:0">
+            Create an avatar with this style in the <a href="/dashboard" style="color:#a1a1aa">dashboard</a>,
+            or <code>POST /api/avatars</code> with <code>"type": "generated", "engine": "{meta.id}"</code>.
+            Collect it into a rotation set and it can change on a schedule — see the
+            <a href="/#playground" style="color:#a1a1aa">playground</a> and <a href="/docs/api" style="color:#a1a1aa">API docs</a>.
+          </p>
+        </div>
+      </section>
+
+      {
+        related.length > 0 && (
+          <section style="border-top:1px solid #1f1f23;padding-top:1.5rem">
+            <h2 style="font-size:1rem;margin:0 0 1rem">More {CATEGORY_LABELS[meta.category].toLowerCase()}</h2>
+            <div style="display:flex;gap:1rem;flex-wrap:wrap">
+              {related.map((r) => (
+                <div style="display:grid;gap:.4rem;justify-items:center">
+                  <AvatarTile style={r} seed={`Felix-${r.id}`} size={88} />
+                  <span style="font-size:.8rem;color:#a1a1aa">{r.name}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      }
+    </main>
+    <SiteFooter />
+  </body>
+</html>
