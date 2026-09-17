@@ -92,4 +92,50 @@ test.describe("avatar lifecycle", () => {
     expect(rb.status()).toBe(404);
     expect((await request.get("/api/avatars/av_missing", { headers: authHeaders() })).status()).toBe(404);
   });
+
+  test("formats: png raster, gif animation, engine catalog", async ({ request }) => {
+    const col = await request.post("/api/collections", {
+      headers: authHeaders(),
+      data: { name: uid("e2e-fmt"), engine_type: "bauhaus" },
+    });
+    const { id: colId } = (await col.json()) as { id: string };
+    const created = await request.post("/api/avatars", {
+      headers: authHeaders(),
+      data: { collection_id: colId, type: "generated", engine: "bauhaus" },
+    });
+    const { id: avId } = (await created.json()) as { id: string };
+
+    const png = await request.get(`/api/avatar/${avId}?format=png&w=64`);
+    expect(png.status()).toBe(200);
+    expect(png.headers()["content-type"]).toBe("image/png");
+    expect(Buffer.from(await png.body()).subarray(0, 4).toString("hex")).toBe("89504e47");
+
+    const badFormat = await request.get(`/api/avatar/${avId}?format=bmp`);
+    expect(badFormat.status()).toBe(400);
+
+    const gifOnStatic = await request.get(`/api/avatar/${avId}?format=gif`);
+    expect(gifOnStatic.status()).toBe(400);
+
+    // Animated collection defaults to gif without an explicit format.
+    const acol = await request.post("/api/collections", {
+      headers: authHeaders(),
+      data: { name: uid("e2e-anim"), engine_type: "blink" },
+    });
+    const { id: acolId } = (await acol.json()) as { id: string };
+    const acreated = await request.post("/api/avatars", {
+      headers: authHeaders(),
+      data: { collection_id: acolId, type: "generated", engine: "blink" },
+    });
+    const { id: aavId } = (await acreated.json()) as { id: string };
+    const gif = await request.get(`/api/avatar/${aavId}`);
+    expect(gif.status()).toBe(200);
+    expect(gif.headers()["content-type"]).toBe("image/gif");
+
+    const engines = await request.get("/api/engines");
+    expect(engines.status()).toBe(200);
+    const ids = ((await engines.json()) as { engines: Array<{ id: string }> }).engines.map((e) => e.id);
+    for (const want of ["personas", "blink", "bauhaus", "mixed"]) {
+      expect(ids).toContain(want);
+    }
+  });
 });

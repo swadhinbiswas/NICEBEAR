@@ -92,6 +92,7 @@ const H = () => authHeaders();
 
 const cases: Case[] = [
   { covers: "GET /api/avatar/{id}", run: (r) => r.get(`/api/avatar/${fx.avId}`), expect: [200], contentType: /image/ },
+  { covers: "GET /api/engines", run: (r) => r.get(`/api/engines`), expect: [200] },
   { covers: "GET /api/avatar/{id}/random", run: (r) => r.get(`/api/avatar/${fx.avId}/random`), expect: [200] },
   { covers: "GET /api/avatar/{id}/refresh", run: (r) => r.get(`/api/avatar/${fx.avId}/refresh`), expect: [200] },
   { covers: "GET /api/avatar/{id}/daily", run: (r) => r.get(`/api/avatar/${fx.avId}/daily`), expect: [200] },

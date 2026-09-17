@@ -87,11 +87,23 @@ async function main(): Promise<void> {
       );
     }
     // Warm Astro dev's lazy island compilation so browser tests don't race it.
+    // fetch() warms SSR; a headless visit additionally warms client bundles.
     await Promise.all(
       ["/dashboard", "/login", "/dashboard/api-keys", "/dashboard/webhooks", "/dashboard/collections", "/dashboard/analytics", "/dashboard/team"].map(
         (p) => fetch(`${baseURL}${p}`).then((r) => r.text()).catch(() => ""),
       ),
     );
+    try {
+      const { chromium } = await import("@playwright/test");
+      const browser = await chromium.launch();
+      const page = await browser.newPage();
+      for (const p of ["/login", "/dashboard", "/dashboard/api-keys"]) {
+        await page.goto(`${baseURL}${p}`, { waitUntil: "networkidle", timeout: 60_000 }).catch(() => null);
+      }
+      await browser.close();
+    } catch {
+      /* warmup is best-effort; tests carry their own timeouts */
+    }
   } catch (e) {
     server.kill();
     throw e;

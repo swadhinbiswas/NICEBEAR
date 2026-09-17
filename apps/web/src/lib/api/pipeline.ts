@@ -5,9 +5,11 @@ import { readBytes, writeBytes, readDecision, writeDecision, purgeDecision } fro
 import { avatars } from "../db/schema";
 import { getDb, getEnv, getWaitUntil, type AppEnv } from "../runtime/env";
 import { checkRateLimit, getClientIp } from "../security/ratelimit";
+import { getAnimated } from "../engines/registry";
+import { hfPublicUrl } from "../storage/index.js";
 import { secondsUntilNextBoundary } from "../rotation/evaluator";
 import { buildDailyRule, buildWeeklyRule } from "../rotation/wrappers";
-import { serveAvatar } from "./serve";
+import { serveAvatar, type ImageFormat } from "./serve";
 import {
   buildCollectionsMap,
   evaluateRuleStack,
@@ -47,7 +49,8 @@ function json(status: number, body: Record<string, unknown>): Response {
 /**
  * Full read flow (§4.4): IP rate-limit → Turso (avatar + rules, on KV miss
  * of the decision tier) → evaluator → KV write → bytes (Cache API for
- * generated SVG, jsDelivr 302 for committed assets) → async usage log.
+ * generated SVG/PNG/GIF, 302 to jsDelivr or HF resolve URLs for committed
+ * assets) → async usage log.
  * Target: <50ms cached, <200ms uncached.
  */
 export async function handleAvatarRequest(opts: AvatarRequestOptions): Promise<Response> {
@@ -95,12 +98,19 @@ export async function handleAvatarRequest(opts: AvatarRequestOptions): Promise<R
     engine ??= "identicons";
   }
 
+  // Output format (?format=svg|png|gif, ?w= for png). Animated engines
+  // default to gif; anything else defaults to svg.
+  const formatParam = opts.url.searchParams.get("format");
+  const animatedDefault = !!engine && !!getAnimated(engine);
+  const format: ImageFormat =
+    formatParam === "png" ? "png" : formatParam === "gif" ? "gif" : formatParam === "svg" ? "svg" : animatedDefault ? "gif" : "svg";
+  if (formatParam && !["svg", "png", "gif"].includes(formatParam)) {
+    return json(400, { error: "?format must be svg, png, or gif" });
+  }
+  const width = Number(opts.url.searchParams.get("w") ?? 256);
+
   // Byte-tier fast path (generated SVG / pinned sha).
-  const byteRef = commitOverride
-    ? `sha:${commitOverride}`
-    : engine
-      ? `engine:${engine}:${row.seed ?? seed ?? row.id}`
-      : `avatar:${row.id}`;
+  const byteRef = `${format}:${commitOverride ? `sha:${commitOverride}` : engine ? `engine:${engine}:${row.seed ?? seed ?? row.id}` : `avatar:${row.id}`}${format === "png" ? `:w${Math.max(16, Math.min(1024, Math.floor(width) || 256))}` : ""}`;
   const byteHit = opts.noCache ? null : await readBytes(byteRef);
   if (byteHit) {
     waitUntil(logUsage(db, usage(true, row.id, null, t0, 200, opts.request)));
@@ -181,9 +191,16 @@ export async function handleAvatarRequest(opts: AvatarRequestOptions): Promise<R
     }
   }
 
+  // Storage URL for hf-backed rows (?v= pins to the versioned key from
+  // history; for hf rows commit_sha IS the key, so pickVersion resolves keys).
+  const hfKey = commitOverride ?? row.storageKey;
+  const storageUrl = row.storageBackend === "hf" && hfKey ? hfPublicUrl(env, hfKey) : null;
+
   const res = await serveAvatar({
-    avatarRow: toAvatarRow(row, { engine, commitSha: commitOverride }),
+    avatarRow: toAvatarRow(row, { engine, commitSha: commitOverride, storageUrl }),
     seed,
+    format,
+    width,
   }).catch(() => json(500, { error: "serve failed" }));
 
   const out = withHeaders(res, {

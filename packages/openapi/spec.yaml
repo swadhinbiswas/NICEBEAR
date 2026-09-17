@@ -17,9 +17,17 @@ paths:
         - { name: id, in: path, required: true, schema: { type: string } }
         - { name: seed, in: query, schema: { type: string } }
         - { name: v, in: query, schema: { type: string } }
+        - { name: format, in: query, schema: { type: string, enum: [svg, png, gif], default: svg } }
+        - { name: w, in: query, description: PNG width 16-1024, schema: { type: integer, default: 256 } }
       responses:
-        '200': { description: Image bytes (or 302 to jsDelivr for committed assets) }
+        '200': { description: Image bytes (or 302 to jsDelivr/HF resolve URL for committed assets) }
+        '400': { description: Bad format for this avatar (e.g. gif on a static engine) }
         '404': { description: No avatar matched }
+  /api/engines:
+    get:
+      operationId: listEngines
+      responses:
+        '200': { description: Style catalog (id, kind, supported formats) }
   /api/avatar/{id}/random:
     get:
       operationId: getRandomAvatar

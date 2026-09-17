@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "DONATE_URL"],
+  "globalEnv": ["TURSO_DATABASE_URL", "TURSO_AUTH_TOKEN", "GITHUB_TOKEN", "ASSET_STORE", "HF_NAMESPACE", "HF_BUCKET", "HF_S3_ACCESS_KEY_ID", "HF_S3_SECRET_ACCESS_KEY", "HF_PUBLIC_BASE_URL", "BETTER_AUTH_SECRET", "BETTER_AUTH_URL", "DONATE_URL"],
   "tasks": {
     "build": {"dependsOn": ["^build"], "outputs": ["dist/**", ".astro/**"]},
     "typecheck": {},

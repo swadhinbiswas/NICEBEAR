@@ -2,34 +2,83 @@ import type { APIRoute } from "astro";
 import { AvatarCreateSchema } from "@nicebear/shared-types";
 import { audit, enqueueWebhooks } from "../../../lib/analytics/log";
 import { authedRoute, requireOrgRole } from "../../../lib/api/authed";
-import { loadCollection } from "../../../lib/api/avatars";
+import { loadCollection, loadHistory } from "../../../lib/api/avatars";
+import { HttpError } from "../../../lib/auth/authenticate";
+import type { Database } from "../../../lib/db/client";
 import { avatarPointerHistory, avatars } from "../../../lib/db/schema";
-import { GitHubContentsClient } from "../../../lib/github/client";
 import { newId } from "../../../lib/ids";
+import type { AppEnv } from "../../../lib/runtime/env";
 import { assertSafeExternalUrl, fetchExternalImage } from "../../../lib/security/ssrf";
+import { extForContentType, getStorageBackend, versionedKey } from "../../../lib/storage/index.js";
 
 const nowSec = () => Math.floor(Date.now() / 1000);
-
-function arrayBufferToBase64(buf: ArrayBuffer): string {
-  const bytes = new Uint8Array(buf);
-  let bin = "";
-  const CHUNK = 0x8000;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    bin += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  return btoa(bin);
-}
 
 /** Base64 → approx bytes (for the ~5MB cap check without decoding). */
 function b64Bytes(b64: string): number {
   return Math.floor((b64.length * 3) / 4);
 }
 
+function b64ToBytes(b64: string): Uint8Array {
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+interface PersistedRef {
+  storageBackend: "github" | "hf";
+  storageKey: string;
+  commitSha: string;
+  githubRepo: string | null;
+  githubPath: string | null;
+}
+
+/**
+ * Store one versioned object through the configured asset store and record
+ * pointer history. Keys are versioned (`avatars/<id>/v<seq>.<ext>`) so `?v=N`
+ * resolution works identically on git-backed and bucket-backed stores.
+ */
+async function persistBytes(
+  db: Database,
+  env: AppEnv,
+  args: { avatarId: string; repo: string | null; bytes: Uint8Array; contentType: string; message: string },
+): Promise<PersistedRef> {
+  const createdAt = nowSec();
+  const history = await loadHistory(db, args.avatarId).catch(() => []);
+  const key = versionedKey(args.avatarId, history.length + 1, extForContentType(args.contentType));
+  let backend;
+  try {
+    backend = getStorageBackend(env, { repo: args.repo ?? undefined });
+  } catch (e) {
+    if (e instanceof HttpError) throw e;
+    throw new HttpError(503, "asset store misconfigured", "unconfigured");
+  }
+  let version: string;
+  try {
+    ({ version } = await backend.put({ key, bytes: args.bytes, contentType: args.contentType, message: args.message }));
+  } catch {
+    throw new HttpError(502, `${backend.id} store write failed`, "upstream_error");
+  }
+  if (backend.id === "github") {
+    await db
+      .insert(avatarPointerHistory)
+      .values({ id: newId("avp"), avatarId: args.avatarId, commitSha: version, createdAt })
+      .catch(() => undefined);
+    return { storageBackend: "github", storageKey: key, commitSha: version, githubRepo: args.repo, githubPath: key };
+  }
+  // HF buckets are non-versioned: the key IS the version pointer.
+  await db
+    .insert(avatarPointerHistory)
+    .values({ id: newId("avp"), avatarId: args.avatarId, commitSha: key, createdAt })
+    .catch(() => undefined);
+  return { storageBackend: "hf", storageKey: key, commitSha: key, githubRepo: null, githubPath: null };
+}
+
 /**
  * POST /api/avatars — create (generated | uploaded | external_url).
- * Org is resolved from collection_id, else ?org_id=. GitHub target repo is
- * ?repo=owner/name (per-org default repo mapping lands with the GitHub App
- * installation flow). Mirrored bytes are versioned via avatar_pointer_history.
+ * Org is resolved from collection_id, else ?org_id=. Bytes go through the
+ * configured asset store (github: ?repo=owner/name; hf: server env), keyed
+ * per version. Mirrored bytes are versioned via avatar_pointer_history.
  */
 export const POST: APIRoute = authedRoute("admin", async (ctx, req) => {
   const { db, auth, env, waitUntil, account } = ctx;
@@ -73,6 +122,8 @@ export const POST: APIRoute = authedRoute("admin", async (ctx, req) => {
       githubRepo: null,
       githubPath: null,
       commitSha: null,
+      storageBackend: "github",
+      storageKey: null,
       externalUrl: null,
       attestedRights: 0,
       seed: input.seed ?? id,
@@ -83,39 +134,29 @@ export const POST: APIRoute = authedRoute("admin", async (ctx, req) => {
     if (b64Bytes(input.content_base64) > 5 * 1024 * 1024) {
       return Response.json({ error: "upload exceeds 5MB cap" }, { status: 400 });
     }
-    if (!env.GITHUB_TOKEN) {
-      return Response.json({ error: "asset store not configured (GITHUB_TOKEN)", code: "unconfigured" }, { status: 503 });
-    }
-    if (!repoParam || !/^[^/]+\/[^/]+$/.test(repoParam)) {
-      return Response.json({ error: "?repo=owner/name is required for uploads" }, { status: 400 });
-    }
-    const [owner, repo] = repoParam.split("/");
-    const path = `avatars/${id}/${input.filename}`;
-    let sha: string;
-    try {
-      const gh = new GitHubContentsClient(env.GITHUB_TOKEN);
-      ({ sha } = await gh.putFile(owner, repo, path, input.content_base64, `nicebear: upload ${id}`));
-    } catch {
-      return Response.json({ error: "GitHub upload failed", code: "upstream_error" }, { status: 502 });
-    }
+    const ref = await persistBytes(db, env, {
+      avatarId: id,
+      repo: repoParam,
+      bytes: b64ToBytes(input.content_base64),
+      contentType: input.content_type,
+      message: `nicebear: upload ${id}`,
+    });
     await db.insert(avatars).values({
       id,
       collectionId,
       orgId,
       sourceType: "uploaded",
-      githubRepo: repoParam,
-      githubPath: path,
-      commitSha: sha,
+      githubRepo: ref.githubRepo,
+      githubPath: ref.githubPath,
+      commitSha: ref.commitSha,
+      storageBackend: ref.storageBackend,
+      storageKey: ref.storageKey,
       externalUrl: null,
       attestedRights: 0,
       seed: null,
       createdAt,
       deletedAt: null,
     });
-    await db
-      .insert(avatarPointerHistory)
-      .values({ id: newId("avp"), avatarId: id, commitSha: sha, createdAt })
-      .catch(() => undefined);
   } else {
     // external_url — attestation already enforced by Zod literal(true).
     try {
@@ -130,46 +171,29 @@ export const POST: APIRoute = authedRoute("admin", async (ctx, req) => {
       return Response.json({ error: `source fetch failed: ${(e as Error).message}` }, { status: 400 });
     }
     if (input.mirror !== false) {
-      if (!env.GITHUB_TOKEN) {
-        return Response.json({ error: "asset store not configured (GITHUB_TOKEN)", code: "unconfigured" }, { status: 503 });
-      }
-      if (!repoParam || !/^[^/]+\/[^/]+$/.test(repoParam)) {
-        return Response.json({ error: "?repo=owner/name is required for mirroring" }, { status: 400 });
-      }
-      const [owner, repo] = repoParam.split("/");
-      const ext = fetched.contentType.split("/")[1]?.replace("svg+xml", "svg") ?? "bin";
-      const path = `avatars/${id}/mirrored.${ext}`;
-      let sha: string;
-      try {
-        const gh = new GitHubContentsClient(env.GITHUB_TOKEN);
-        ({ sha } = await gh.putFile(
-          owner,
-          repo,
-          path,
-          arrayBufferToBase64(fetched.bytes),
-          `nicebear: mirror ${id}`,
-        ));
-      } catch {
-        return Response.json({ error: "GitHub mirror failed", code: "upstream_error" }, { status: 502 });
-      }
+      const ref = await persistBytes(db, env, {
+        avatarId: id,
+        repo: repoParam,
+        bytes: new Uint8Array(fetched.bytes),
+        contentType: fetched.contentType,
+        message: `nicebear: mirror ${id}`,
+      });
       await db.insert(avatars).values({
         id,
         collectionId,
         orgId,
         sourceType: "external_url",
-        githubRepo: repoParam,
-        githubPath: path,
-        commitSha: sha,
+        githubRepo: ref.githubRepo,
+        githubPath: ref.githubPath,
+        commitSha: ref.commitSha,
+        storageBackend: ref.storageBackend,
+        storageKey: ref.storageKey,
         externalUrl: input.source_url,
         attestedRights: 1,
         seed: null,
         createdAt,
         deletedAt: null,
       });
-      await db
-        .insert(avatarPointerHistory)
-        .values({ id: newId("avp"), avatarId: id, commitSha: sha, createdAt })
-        .catch(() => undefined);
     } else {
       // Live proxy — served with short TTL, never long-cached (§4.4).
       await db.insert(avatars).values({
@@ -180,6 +204,8 @@ export const POST: APIRoute = authedRoute("admin", async (ctx, req) => {
         githubRepo: null,
         githubPath: null,
         commitSha: null,
+        storageBackend: "github",
+        storageKey: null,
         externalUrl: input.source_url,
         attestedRights: 1,
         seed: null,

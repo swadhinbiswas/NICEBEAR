@@ -9,6 +9,8 @@ import { Dashboard, Err, KeyBar, useNb } from "./shared";
 export const ENGINES = [
   "pixel-art", "robots", "cartoon", "anime", "minimal", "business", "fantasy",
   "gaming", "cyberpunk", "geometric", "abstract", "animals", "identicons", "mixed",
+  "personas", "droids", "bauhaus", "rings", "waves", "orbits",
+  "blink", "orb", "rain",
 ];
 
 interface Collection {

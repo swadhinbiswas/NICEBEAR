@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,6 +18,12 @@ export function Login({ githubOn, next }: { githubOn: boolean; next: string }) {
   const [mode, setMode] = useState<"in" | "up">("in");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Mounted only runs client-side post-hydration: gating the submit on it
+  // means pre-hydration clicks are impossible instead of silently dropped.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const form = useForm<z.infer<typeof EmailSchema>>({
     resolver: zodResolver(EmailSchema),
     defaultValues: { name: "", email: "", password: "" },
@@ -78,7 +84,7 @@ export function Login({ githubOn, next }: { githubOn: boolean; next: string }) {
             {...form.register("password")}
             autoComplete={mode === "up" ? "new-password" : "current-password"}
           />
-          <button className={cn(buttonClass(), "w-full")} disabled={busy}>
+          <button className={cn(buttonClass(), "w-full")} disabled={busy || !mounted}>
             {busy ? "…" : mode === "up" ? "Create account" : "Sign in"}
           </button>
         </form>

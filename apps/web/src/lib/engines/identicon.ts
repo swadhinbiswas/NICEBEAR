@@ -8,6 +8,7 @@ function hue(seed: string, salt: string): number {
 /** 5x5 mirrored identicon — deterministic per seed. */
 export const identiconEngine: AvatarEngine = {
   id: "identicons",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`identicon:${seed}`);
     const bg = hue(seed, "bg");

@@ -87,7 +87,11 @@ export const avatars = sqliteTable(
     sourceType: text("source_type", { enum: ["generated", "uploaded", "external_url"] }).notNull(),
     githubRepo: text("github_repo"),
     githubPath: text("github_path"),
+    // Opaque version pointer: git commit sha (github) or versioned S3 key (hf).
     commitSha: text("commit_sha"),
+    // Asset store for this row's bytes. See src/lib/storage/.
+    storageBackend: text("storage_backend").notNull().default("github"),
+    storageKey: text("storage_key"),
     externalUrl: text("external_url"),
     attestedRights: integer("attested_rights").default(0),
     seed: text("seed"),

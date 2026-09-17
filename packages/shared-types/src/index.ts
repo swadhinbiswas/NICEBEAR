@@ -33,6 +33,17 @@ export const EngineTypeSchema = z.enum([
   "animals",
   "identicons",
   "mixed",
+  // Static DiceBear-grade styles (SVG).
+  "personas",
+  "droids",
+  "bauhaus",
+  "rings",
+  "waves",
+  "orbits",
+  // Animated styles (GIF-first; ?format=gif).
+  "blink",
+  "orb",
+  "rain",
 ]);
 
 const BaseAvatarCreate = z.object({

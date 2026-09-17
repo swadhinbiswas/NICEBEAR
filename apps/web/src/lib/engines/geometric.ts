@@ -4,6 +4,7 @@ import type { AvatarEngine } from "./types";
 /** Concentric geometric composition — deterministic per seed. */
 export const geometricEngine: AvatarEngine = {
   id: "geometric",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`geo:${seed}`);
     const hue = h % 360;

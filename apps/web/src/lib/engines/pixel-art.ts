@@ -10,6 +10,7 @@ const PALETTES = [
 /** 8x8 pixel-art face-ish sprite — deterministic per seed. */
 export const pixelArtEngine: AvatarEngine = {
   id: "pixel-art",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`pixel:${seed}`);
     const palette = PALETTES[h % PALETTES.length];

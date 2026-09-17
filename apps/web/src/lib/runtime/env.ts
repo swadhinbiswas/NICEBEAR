@@ -20,6 +20,13 @@ export interface AppEnv {
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
   NODE_ENV?: string;
+  /** Asset store selector: `github` (default) or `hf` (Hugging Face buckets). */
+  ASSET_STORE?: string;
+  HF_NAMESPACE?: string;
+  HF_BUCKET?: string;
+  HF_S3_ACCESS_KEY_ID?: string;
+  HF_S3_SECRET_ACCESS_KEY?: string;
+  HF_PUBLIC_BASE_URL?: string;
   DECISIONS?: KvStore;
   WEBHOOK_QUEUE?: QueueSender;
 }
@@ -47,6 +54,12 @@ export function getEnv(locals: unknown, extra?: Partial<AppEnv>): AppEnv {
     GITHUB_CLIENT_ID: pick("GITHUB_CLIENT_ID"),
     GITHUB_CLIENT_SECRET: pick("GITHUB_CLIENT_SECRET"),
     NODE_ENV: pick("NODE_ENV"),
+    ASSET_STORE: pick("ASSET_STORE"),
+    HF_NAMESPACE: pick("HF_NAMESPACE"),
+    HF_BUCKET: pick("HF_BUCKET"),
+    HF_S3_ACCESS_KEY_ID: pick("HF_S3_ACCESS_KEY_ID"),
+    HF_S3_SECRET_ACCESS_KEY: pick("HF_S3_SECRET_ACCESS_KEY"),
+    HF_PUBLIC_BASE_URL: pick("HF_PUBLIC_BASE_URL"),
     DECISIONS: (base["DECISIONS"] as KvStore | undefined) ?? extra?.DECISIONS,
     WEBHOOK_QUEUE: (base["WEBHOOK_QUEUE"] as QueueSender | undefined) ?? extra?.WEBHOOK_QUEUE,
   };

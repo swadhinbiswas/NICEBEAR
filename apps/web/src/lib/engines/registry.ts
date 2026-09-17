@@ -1,3 +1,5 @@
+import { blinkEngine, orbEngine, rainEngine } from "./animated";
+import { bauhausEngine, droidsEngine, orbitsEngine, personasEngine, ringsEngine, wavesEngine } from "./gallery";
 import { geometricEngine } from "./geometric";
 import { identiconEngine } from "./identicon";
 import { pixelArtEngine } from "./pixel-art";
@@ -14,7 +16,7 @@ import {
   robotsEngine,
 } from "./procedural";
 import { hashStringToUint32 } from "../rotation/hash";
-import type { AvatarEngine } from "./types";
+import type { AnimatedEngine, AvatarEngine } from "./types";
 
 /**
  * Pluggable registry (§6). Add a new engine by dropping a file in engines/
@@ -34,6 +36,12 @@ const engines = new Map<string, AvatarEngine>([
   [cyberpunkEngine.id, cyberpunkEngine],
   [abstractEngine.id, abstractEngine],
   [animalsEngine.id, animalsEngine],
+  [personasEngine.id, personasEngine],
+  [droidsEngine.id, droidsEngine],
+  [bauhausEngine.id, bauhausEngine],
+  [ringsEngine.id, ringsEngine],
+  [wavesEngine.id, wavesEngine],
+  [orbitsEngine.id, orbitsEngine],
 ]);
 
 const BASE_IDS = [...engines.keys()];
@@ -41,6 +49,7 @@ const BASE_IDS = [...engines.keys()];
 /** `mixed`: deterministic per-seed pick across all base engines. */
 export const mixedEngine: AvatarEngine = {
   id: "mixed",
+  kind: "svg",
   generate(seed: string, options?: Record<string, unknown>): string {
     const pick = BASE_IDS[hashStringToUint32(`mixed:${seed}`) % BASE_IDS.length]!;
     return engines.get(pick)!.generate(seed, options);
@@ -54,6 +63,24 @@ export function registerEngine(engine: AvatarEngine): void {
 
 export function getEngine(id: string): AvatarEngine | undefined {
   return engines.get(id);
+}
+
+const animated = new Map<string, AnimatedEngine>([
+  [blinkEngine.id, blinkEngine],
+  [orbEngine.id, orbEngine],
+  [rainEngine.id, rainEngine],
+]);
+
+export function registerAnimated(engine: AnimatedEngine): void {
+  animated.set(engine.id, engine);
+}
+
+export function getAnimated(id: string): AnimatedEngine | undefined {
+  return animated.get(id);
+}
+
+export function listAnimated(): string[] {
+  return [...animated.keys()];
 }
 
 export function listEngines(): string[] {

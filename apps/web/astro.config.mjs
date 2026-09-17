@@ -10,5 +10,11 @@ export default defineConfig({
   integrations: [react()],
   output: "server",
   server: { port: 4321 },
-  vite: { plugins: [tailwindcss()] },
+  vite: {
+    plugins: [tailwindcss()],
+    // resvg ships a native binding: never bundle it for the edge worker.
+    // Node runtimes (dev, self-host, tests) resolve it natively; Workers
+    // fail the dynamic import and ?format=png answers 503 there.
+    ssr: { external: ["@resvg/resvg-js"] },
+  },
 });

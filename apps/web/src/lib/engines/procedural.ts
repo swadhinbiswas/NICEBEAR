@@ -12,6 +12,7 @@ function svg(inner: string, bg: string, size = 100): string {
 /** Robot head — antenna style + eye layout vary by seed. */
 export const robotsEngine: AvatarEngine = {
   id: "robots",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`robots:${seed}`);
     const body = `hsl(${hue(seed, "rb")} 60% 55%)`;
@@ -30,6 +31,7 @@ export const robotsEngine: AvatarEngine = {
 /** Cartoon face — smile + eye variants. */
 export const cartoonEngine: AvatarEngine = {
   id: "cartoon",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`cartoon:${seed}`);
     const skin = `hsl(${20 + (h % 30)} 70% ${55 + (h % 20)}%)`;
@@ -50,6 +52,7 @@ export const cartoonEngine: AvatarEngine = {
 /** Anime face — big eyes, blush, hair fringe. */
 export const animeEngine: AvatarEngine = {
   id: "anime",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`anime:${seed}`);
     const hair = `hsl(${hue(seed, "ah")} 65% ${30 + (h % 25)}%)`;
@@ -71,6 +74,7 @@ export const animeEngine: AvatarEngine = {
 /** Minimal — duotone disc + bar. */
 export const minimalEngine: AvatarEngine = {
   id: "minimal",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`minimal:${seed}`);
     const fg = `hsl(${hue(seed, "mfg")} 55% 45%)`;
@@ -84,6 +88,7 @@ export const minimalEngine: AvatarEngine = {
 /** Business — shirt, collar, tie. */
 export const businessEngine: AvatarEngine = {
   id: "business",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`business:${seed}`);
     const skin = `hsl(${20 + (h % 25)} 60% 60%)`;
@@ -106,6 +111,7 @@ export const businessEngine: AvatarEngine = {
 /** Fantasy — wizard hat + gem. */
 export const fantasyEngine: AvatarEngine = {
   id: "fantasy",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`fantasy:${seed}`);
     const robe = `hsl(${hue(seed, "fr")} 60% 35%)`;
@@ -125,6 +131,7 @@ export const fantasyEngine: AvatarEngine = {
 /** Gaming — controller on dark. */
 export const gamingEngine: AvatarEngine = {
   id: "gaming",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`gaming:${seed}`);
     const pad = `hsl(${hue(seed, "gp")} 70% 45%)`;
@@ -147,6 +154,7 @@ export const gamingEngine: AvatarEngine = {
 /** Cyberpunk — neon visor + scanlines. */
 export const cyberpunkEngine: AvatarEngine = {
   id: "cyberpunk",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`cyberpunk:${seed}`);
     const neon = `hsl(${hue(seed, "cn")} 100% 60%)`;
@@ -167,6 +175,7 @@ export const cyberpunkEngine: AvatarEngine = {
 /** Abstract — hash-driven bezier blobs. */
 export const abstractEngine: AvatarEngine = {
   id: "abstract",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`abstract:${seed}`);
     const hue0 = hue(seed, "ab");
@@ -186,6 +195,7 @@ export const abstractEngine: AvatarEngine = {
 /** Animals — cat face with variant ears/markings. */
 export const animalsEngine: AvatarEngine = {
   id: "animals",
+  kind: "svg",
   generate(seed: string): string {
     const h = hashStringToUint32(`animals:${seed}`);
     const fur = `hsl(${25 + (h % 20)} 45% ${45 + (h % 25)}%)`;

@@ -97,20 +97,27 @@ test.describe("auth sessions", () => {
     await expect(page.getByText("Sign in to NiceBear")).toBeVisible();
     await expect(page.getByRole("button", { name: "Continue with GitHub" })).toHaveCount(0);
     // Clicks/fills can land pre-hydration (React keeps the DOM value but drops
-    // the state update, so validation silently fails). Retry the whole flow
-    // until navigation proves a fully-synced submit.
-    const email = `${uid("webup")}@t.dev`;
+    // the state update, so validation silently fails). Two guards make this
+    // deterministic: the submit stays disabled until mount (proof of
+    // hydration), and every attempt uses a fresh email so a retry can never
+    // poison itself with "already exists" 400s.
     const emailInput = page.getByPlaceholder("Email");
     const passInput = page.getByPlaceholder("Password (8+ chars)");
     const submitBtn = page.getByRole("button", { name: "Create account" });
     await expect(async () => {
       if (!page.url().includes("/login")) return;
+      const attemptEmail = `${uid("webup")}-${Date.now()}@t.dev`;
+      // Prove hydration first (submits stay disabled until mount); every
+      // interaction after this point syncs with React state.
+      await expect(page.locator("form").getByRole("button", { name: "Sign in", exact: true })).toBeEnabled({
+        timeout: 30000,
+      });
       await page.getByRole("button", { name: "Sign up", exact: true }).click();
-      await emailInput.fill(email);
+      await emailInput.fill(attemptEmail);
       await passInput.fill("password123");
       await submitBtn.click();
-      await page.waitForURL("**/dashboard", { timeout: 8000 });
-    }).toPass({ timeout: 90000 });
+      await page.waitForURL("**/dashboard", { timeout: 45000 });
+    }).toPass({ timeout: 120000 });
     await expect(page.getByRole("heading", { name: "Playground" })).toBeVisible();
   });
 });

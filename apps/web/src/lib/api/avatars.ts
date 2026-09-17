@@ -14,6 +14,10 @@ export interface AvatarRow {
   githubRepo: string | null;
   githubPath: string | null;
   commitSha: string | null;
+  storageBackend: "github" | "hf";
+  storageKey: string | null;
+  /** Precomputed public URL for hf rows (pure, no credentials needed). */
+  storageUrl: string | null;
   externalUrl: string | null;
 }
 
@@ -78,7 +82,7 @@ export async function loadAvatar(db: Database, id: string) {
 
 export function toAvatarRow(
   row: NonNullable<Awaited<ReturnType<typeof loadAvatar>>>,
-  opts?: { engine?: string | null; commitSha?: string | null },
+  opts?: { engine?: string | null; commitSha?: string | null; storageUrl?: string | null },
 ): AvatarRow {
   return {
     id: row.id,
@@ -89,6 +93,9 @@ export function toAvatarRow(
     githubRepo: row.githubRepo,
     githubPath: row.githubPath,
     commitSha: opts?.commitSha ?? row.commitSha,
+    storageBackend: (row.storageBackend as "github" | "hf") ?? "github",
+    storageKey: row.storageKey,
+    storageUrl: opts?.storageUrl ?? null,
     externalUrl: row.externalUrl,
   };
 }
